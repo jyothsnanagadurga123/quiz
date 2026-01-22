@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GK Quiz</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f3;
+}
+
+.quiz-box {
+    width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+.timer {
+    text-align: right;
+    font-weight: bold;
+    color: #d00000;
+}
+
+.question {
+    font-size: 18px;
+    margin: 20px 0;
+}
+
+.options label {
+    display: block;
+    padding: 10px;
+    margin: 8px 0;
+    background: #f1f1f1;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.options input {
+    margin-right: 10px;
+}
+
+.correct {
+    background-color: #c8f7c5 !important;
+}
+
+.wrong {
+    background-color: #f7c5c5 !important;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    background: #0077b6;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #023e8a;
+}
+
+/* Score Circle */
+.score-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 8px solid #2a9d8f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: #2a9d8f;
+    margin: 30px auto;
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-box">
+    <h2>General Knowledge Quiz</h2>
+    <div class="timer">Time Left: <span id="time">30</span>s</div>
+
+    <div id="question" class="question"></div>
+    <div id="options" class="options"></div>
+
+    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+
+    <div id="scoreCircle" class="score-circle" style="display:none;"></div>
+</div>
+
+<script>
+const quizData = [
+ {q:"Capital of India?", o:["Mumbai","Delhi","Kolkata","Chennai"], a:1},
+ {q:"Largest planet?", o:["Earth","Mars","Jupiter","Saturn"], a:2},
+ {q:"National animal of India?", o:["Tiger","Lion","Elephant","Leopard"], a:0},
+ {q:"Who invented electricity?", o:["Newton","Edison","Einstein","Tesla"], a:1},
+ {q:"Fastest land animal?", o:["Cheetah","Tiger","Horse","Lion"], a:0},
+ {q:"Currency of Japan?", o:["Won","Yen","Dollar","Peso"], a:1},
+ {q:"Largest ocean?", o:["Indian","Pacific","Atlantic","Arctic"], a:1},
+ {q:"Red Planet?", o:["Earth","Mars","Venus","Jupiter"], a:1},
+ {q:"Father of Computer?", o:["Charles Babbage","Alan Turing","Bill Gates","Steve Jobs"], a:0},
+ {q:"Smallest continent?", o:["Asia","Europe","Australia","Africa"], a:2},
+ {q:"National bird of India?", o:["Crow","Peacock","Parrot","Eagle"], a:1},
+ {q:"Taj Mahal is in?", o:["Delhi","Agra","Jaipur","Mumbai"], a:1},
+ {q:"Human blood color?", o:["Blue","Green","Red","Yellow"], a:2},
+ {q:"Largest desert?", o:["Sahara","Gobi","Thar","Kalahari"], a:0},
+ {q:"Sun is a?", o:["Planet","Star","Galaxy","Asteroid"], a:1}
+];
+
+let current = 0;
+let score = 0;
+let timeLeft = 30;
+let timer;
+
+function startTimer() {
+    timeLeft = 30;
+    document.getElementById("time").innerText = timeLeft;
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("time").innerText = timeLeft;
+        if (timeLeft === 0) {
+            clearInterval(timer);
+            nextQuestion();
+        }
+    }, 1000);
+}
+
+function loadQuestion() {
+    clearInterval(timer);
+    startTimer();
+
+    const q = quizData[current];
+    document.getElementById("question").innerText = q.q;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    q.o.forEach((opt, i) => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="radio" name="option" value="${i}"> ${opt}`;
+        optionsDiv.appendChild(label);
+    });
+
+    document.getElementById("nextBtn").innerText =
+        current === quizData.length - 1 ? "Submit" : "Next";
+}
+
+function nextQuestion() {
+    clearInterval(timer);
+    const selected = document.querySelector('input[name="option"]:checked');
+    const labels = document.querySelectorAll(".options label");
+
+    if (selected) {
+        const ans = parseInt(selected.value);
+        if (ans === quizData[current].a) {
+            score++;
+            labels[ans].classList.add("correct");
+        } else {
+            labels[ans].classList.add("wrong");
+            labels[quizData[current].a].classList.add("correct");
+        }
+    }
+
+    setTimeout(() => {
+        current++;
+        if (current < quizData.length) {
+            loadQuestion();
+        } else {
+            showScore();
+        }
+    }, 700);
+}
+
+function showScore() {
+    document.getElementById("question").style.display = "none";
+    document.getElementById("options").style.display = "none";
+    document.getElementById("nextBtn").style.display = "none";
+    document.querySelector(".timer").style.display = "none";
+
+    const circle = document.getElementById("scoreCircle");
+    circle.style.display = "flex";
+    circle.innerText = `${score} / ${quizData.length}`;
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
