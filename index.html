@@ -2,200 +2,233 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GK Quiz</title>
+<title>Quiz</title>
 
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #eef2f3;
+    background: #f0f0f0;
 }
 
-.quiz-box {
-    width: 500px;
-    margin: 40px auto;
+/* Modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
     background: #fff;
+    width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    border-radius: 10px;
 }
 
+/* Quiz */
 h2 {
     text-align: center;
 }
 
-.timer {
+#timer {
     text-align: right;
+    color: red;
     font-weight: bold;
-    color: #d00000;
 }
 
-.question {
-    font-size: 18px;
-    margin: 20px 0;
-}
-
-.options label {
-    display: block;
+.option {
+    background: #eee;
     padding: 10px;
     margin: 8px 0;
-    background: #f1f1f1;
     border-radius: 6px;
     cursor: pointer;
 }
 
-.options input {
-    margin-right: 10px;
+.option:hover {
+    background: #cfe2ff;
 }
 
-.correct {
-    background-color: #c8f7c5 !important;
+.option.selected {
+    background: #198754;
+    color: #fff;
 }
 
-.wrong {
-    background-color: #f7c5c5 !important;
-}
-
+/* Buttons */
 button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    font-size: 16px;
+    padding: 10px 15px;
     border: none;
-    border-radius: 6px;
-    background: #0077b6;
+    background: #0d6efd;
     color: white;
+    border-radius: 6px;
     cursor: pointer;
+    margin-top: 10px;
 }
 
 button:hover {
-    background: #023e8a;
+    background: #084298;
 }
 
-/* Score Circle */
+/* Result */
+.result {
+    text-align: center;
+}
+
 .score-circle {
-    width: 160px;
-    height: 160px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    border: 8px solid #2a9d8f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
+    background: #198754;
+    color: white;
+    line-height: 150px;
+    font-size: 32px;
+    margin: 20px auto;
+}
+
+/* Answer Review */
+.review {
+    text-align: left;
+    margin-top: 20px;
+}
+
+.correct {
+    color: green;
     font-weight: bold;
-    color: #2a9d8f;
-    margin: 30px auto;
+}
+
+.wrong {
+    color: red;
+    font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<div class="quiz-box">
-    <h2>General Knowledge Quiz</h2>
-    <div class="timer">Time Left: <span id="time">30</span>s</div>
+<div class="modal">
+<div class="modal-content">
 
-    <div id="question" class="question"></div>
-    <div id="options" class="options"></div>
+<h2>GK Model Quiz</h2>
+<div id="timer">Time: 30s</div>
 
-    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+<div id="question"></div>
+<div id="options"></div>
 
-    <div id="scoreCircle" class="score-circle" style="display:none;"></div>
+<button id="nextBtn">Next</button>
+
+<!-- RESULT -->
+<div class="result" id="result" style="display:none;">
+    <div class="score-circle" id="scoreCircle"></div>
+    <p id="timeSpent"></p>
+
+    <button onclick="showAnswers()">Show Correct Answers</button>
+
+    <div class="review" id="review" style="display:none;"></div>
+</div>
+
+</div>
 </div>
 
 <script>
-const quizData = [
- {q:"Capital of India?", o:["Mumbai","Delhi","Kolkata","Chennai"], a:1},
- {q:"Largest planet?", o:["Earth","Mars","Jupiter","Saturn"], a:2},
- {q:"National animal of India?", o:["Tiger","Lion","Elephant","Leopard"], a:0},
- {q:"Who invented electricity?", o:["Newton","Edison","Einstein","Tesla"], a:1},
- {q:"Fastest land animal?", o:["Cheetah","Tiger","Horse","Lion"], a:0},
- {q:"Currency of Japan?", o:["Won","Yen","Dollar","Peso"], a:1},
- {q:"Largest ocean?", o:["Indian","Pacific","Atlantic","Arctic"], a:1},
+const quiz = [
+ {q:"Capital of India?", o:["Delhi","Mumbai","Chennai","Kolkata"], a:0},
+ {q:"Largest planet?", o:["Earth","Mars","Jupiter","Venus"], a:2},
+ {q:"National animal of India?", o:["Lion","Tiger","Elephant","Horse"], a:1},
+ {q:"Who invented computer?", o:["Newton","Charles Babbage","Einstein","Tesla"], a:1},
+ {q:"Fastest land animal?", o:["Cheetah","Lion","Horse","Dog"], a:0},
  {q:"Red Planet?", o:["Earth","Mars","Venus","Jupiter"], a:1},
- {q:"Father of Computer?", o:["Charles Babbage","Alan Turing","Bill Gates","Steve Jobs"], a:0},
- {q:"Smallest continent?", o:["Asia","Europe","Australia","Africa"], a:2},
- {q:"National bird of India?", o:["Crow","Peacock","Parrot","Eagle"], a:1},
- {q:"Taj Mahal is in?", o:["Delhi","Agra","Jaipur","Mumbai"], a:1},
- {q:"Human blood color?", o:["Blue","Green","Red","Yellow"], a:2},
- {q:"Largest desert?", o:["Sahara","Gobi","Thar","Kalahari"], a:0},
- {q:"Sun is a?", o:["Planet","Star","Galaxy","Asteroid"], a:1}
+ {q:"Largest ocean?", o:["Indian","Pacific","Atlantic","Arctic"], a:1},
+ {q:"Taj Mahal located in?", o:["Delhi","Agra","Jaipur","Mumbai"], a:1},
+ {q:"Currency of Japan?", o:["Yuan","Won","Yen","Dollar"], a:2},
+ {q:"National flower of India?", o:["Rose","Lotus","Lily","Sunflower"], a:1},
+ {q:"Smallest continent?", o:["Asia","Australia","Europe","Africa"], a:1},
+ {q:"Who wrote Ramayana?", o:["Valmiki","Tulsidas","Kalidas","Ved Vyas"], a:0},
+ {q:"Water chemical formula?", o:["H2O","CO2","O2","NaCl"], a:0},
+ {q:"Largest mammal?", o:["Elephant","Blue Whale","Giraffe","Hippo"], a:1},
+ {q:"Sun rises in?", o:["West","North","East","South"], a:2}
 ];
 
-let current = 0;
-let score = 0;
-let timeLeft = 30;
-let timer;
+let index = 0, score = 0, time = 30, totalTime = 0;
+let timer, selected = null, userAnswers = [];
 
-function startTimer() {
-    timeLeft = 30;
-    document.getElementById("time").innerText = timeLeft;
-    timer = setInterval(() => {
-        timeLeft--;
-        document.getElementById("time").innerText = timeLeft;
-        if (timeLeft === 0) {
-            clearInterval(timer);
-            nextQuestion();
-        }
-    }, 1000);
-}
+const qBox = document.getElementById("question");
+const optBox = document.getElementById("options");
+const timerBox = document.getElementById("timer");
+const nextBtn = document.getElementById("nextBtn");
 
 function loadQuestion() {
-    clearInterval(timer);
-    startTimer();
+    selected = null;
+    time = 30;
+    timerBox.innerText = `Time: ${time}s`;
 
-    const q = quizData[current];
-    document.getElementById("question").innerText = q.q;
+    qBox.innerHTML = `<h3>Q${index+1}. ${quiz[index].q}</h3>`;
+    optBox.innerHTML = "";
 
-    const optionsDiv = document.getElementById("options");
-    optionsDiv.innerHTML = "";
-
-    q.o.forEach((opt, i) => {
-        const label = document.createElement("label");
-        label.innerHTML = `<input type="radio" name="option" value="${i}"> ${opt}`;
-        optionsDiv.appendChild(label);
+    quiz[index].o.forEach((opt,i)=>{
+        let div = document.createElement("div");
+        div.className = "option";
+        div.innerText = opt;
+        div.onclick = () => selectOption(div,i);
+        optBox.appendChild(div);
     });
 
-    document.getElementById("nextBtn").innerText =
-        current === quizData.length - 1 ? "Submit" : "Next";
+    nextBtn.innerText = index === quiz.length-1 ? "Submit" : "Next";
+    startTimer();
+}
+
+function selectOption(el,i) {
+    document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+    el.classList.add("selected");
+    selected = i;
+}
+
+function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(()=>{
+        time--;
+        totalTime++;
+        timerBox.innerText = `Time: ${time}s`;
+        if(time === 0) nextQuestion();
+    },1000);
 }
 
 function nextQuestion() {
     clearInterval(timer);
-    const selected = document.querySelector('input[name="option"]:checked');
-    const labels = document.querySelectorAll(".options label");
+    userAnswers.push(selected);
 
-    if (selected) {
-        const ans = parseInt(selected.value);
-        if (ans === quizData[current].a) {
-            score++;
-            labels[ans].classList.add("correct");
-        } else {
-            labels[ans].classList.add("wrong");
-            labels[quizData[current].a].classList.add("correct");
-        }
-    }
+    if(selected === quiz[index].a) score++;
+    index++;
 
-    setTimeout(() => {
-        current++;
-        if (current < quizData.length) {
-            loadQuestion();
-        } else {
-            showScore();
-        }
-    }, 700);
+    if(index < quiz.length) loadQuestion();
+    else showResult();
 }
 
-function showScore() {
-    document.getElementById("question").style.display = "none";
-    document.getElementById("options").style.display = "none";
-    document.getElementById("nextBtn").style.display = "none";
-    document.querySelector(".timer").style.display = "none";
+function showResult() {
+    qBox.style.display = optBox.style.display = nextBtn.style.display = timerBox.style.display = "none";
+    document.getElementById("result").style.display = "block";
 
-    const circle = document.getElementById("scoreCircle");
-    circle.style.display = "flex";
-    circle.innerText = `${score} / ${quizData.length}`;
+    document.getElementById("scoreCircle").innerText = `${score}/15`;
+    document.getElementById("timeSpent").innerText = `Total Time Spent: ${totalTime} seconds`;
 }
 
+function showAnswers() {
+    const review = document.getElementById("review");
+    review.style.display = "block";
+    review.innerHTML = "<h3>Correct Answers</h3>";
+
+    quiz.forEach((q,i)=>{
+        review.innerHTML += `
+        <p>
+            <b>Q${i+1}. ${q.q}</b><br>
+            <span class="correct">✔ Correct Answer: ${q.o[q.a]}</span>
+        </p>`;
+    });
+}
+
+nextBtn.onclick = nextQuestion;
 loadQuestion();
 </script>
 
