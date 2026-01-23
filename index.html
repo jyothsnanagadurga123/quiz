@@ -22,7 +22,7 @@ body {
 
 .modal-content {
     background: #fff;
-    width: 600px;
+    width: 650px;
     max-height: 90vh;
     overflow-y: auto;
     padding: 20px;
@@ -88,7 +88,7 @@ button:hover {
     margin: 20px auto;
 }
 
-/* Answer Review */
+/* Review */
 .review {
     text-align: left;
     margin-top: 20px;
@@ -101,6 +101,11 @@ button:hover {
 
 .wrong {
     color: red;
+    font-weight: bold;
+}
+
+.not-attempted {
+    color: gray;
     font-weight: bold;
 }
 </style>
@@ -124,7 +129,7 @@ button:hover {
     <div class="score-circle" id="scoreCircle"></div>
     <p id="timeSpent"></p>
 
-    <button onclick="showAnswers()">Show Correct Answers</button>
+    <button onclick="showAnswers()">Review Answers</button>
 
     <div class="review" id="review" style="display:none;"></div>
 </div>
@@ -164,67 +169,90 @@ function loadQuestion() {
     time = 30;
     timerBox.innerText = `Time: ${time}s`;
 
-    qBox.innerHTML = `<h3>Q${index+1}. ${quiz[index].q}</h3>`;
+    qBox.innerHTML = `<h3>Q${index + 1}. ${quiz[index].q}</h3>`;
     optBox.innerHTML = "";
 
-    quiz[index].o.forEach((opt,i)=>{
-        let div = document.createElement("div");
+    quiz[index].o.forEach((opt, i) => {
+        const div = document.createElement("div");
         div.className = "option";
         div.innerText = opt;
-        div.onclick = () => selectOption(div,i);
+        div.onclick = () => selectOption(div, i);
         optBox.appendChild(div);
     });
 
-    nextBtn.innerText = index === quiz.length-1 ? "Submit" : "Next";
+    nextBtn.innerText = index === quiz.length - 1 ? "Submit" : "Next";
     startTimer();
 }
 
-function selectOption(el,i) {
-    document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+function selectOption(el, i) {
+    document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
     el.classList.add("selected");
     selected = i;
 }
 
 function startTimer() {
     clearInterval(timer);
-    timer = setInterval(()=>{
+    timer = setInterval(() => {
         time--;
         totalTime++;
         timerBox.innerText = `Time: ${time}s`;
-        if(time === 0) nextQuestion();
-    },1000);
+        if (time === 0) nextQuestion();
+    }, 1000);
 }
 
 function nextQuestion() {
     clearInterval(timer);
     userAnswers.push(selected);
 
-    if(selected === quiz[index].a) score++;
+    if (selected === quiz[index].a) score++;
     index++;
 
-    if(index < quiz.length) loadQuestion();
+    if (index < quiz.length) loadQuestion();
     else showResult();
 }
 
 function showResult() {
     qBox.style.display = optBox.style.display = nextBtn.style.display = timerBox.style.display = "none";
     document.getElementById("result").style.display = "block";
-
-    document.getElementById("scoreCircle").innerText = `${score}/15`;
-    document.getElementById("timeSpent").innerText = `Total Time Spent: ${totalTime} seconds`;
+    document.getElementById("scoreCircle").innerText = `${score}/${quiz.length}`;
+    document.getElementById("timeSpent").innerText = `Total Time: ${totalTime} seconds`;
 }
 
 function showAnswers() {
     const review = document.getElementById("review");
     review.style.display = "block";
-    review.innerHTML = "<h3>Correct Answers</h3>";
+    review.innerHTML = "<h3>Answer Review</h3>";
 
-    quiz.forEach((q,i)=>{
+    quiz.forEach((q, i) => {
+        const userAns = userAnswers[i];
+        const correctAns = q.a;
+
+        let statusClass, statusText, userText;
+
+        if (userAns === null) {
+            statusClass = "not-attempted";
+            statusText = "⚪ Not Attempted";
+            userText = "-";
+        } else if (userAns === correctAns) {
+            statusClass = "correct";
+            statusText = "✅ Correct";
+            userText = q.o[userAns];
+        } else {
+            statusClass = "wrong";
+            statusText = "❌ Wrong";
+            userText = q.o[userAns];
+        }
+
         review.innerHTML += `
         <p>
-            <b>Q${i+1}. ${q.q}</b><br>
-            <span class="correct">✔ Correct Answer: ${q.o[q.a]}</span>
-        </p>`;
+            <b>Q${i + 1}. ${q.q}</b><br>
+            ✔ Correct Answer: <span class="correct">${q.o[correctAns]}</span><br>
+            <span class="${statusClass}">
+                ${statusText} — Your Answer: ${userText}
+            </span>
+        </p>
+        <hr>
+        `;
     });
 }
 
@@ -234,4 +262,6 @@ loadQuestion();
 
 </body>
 </html>
+
+
 
